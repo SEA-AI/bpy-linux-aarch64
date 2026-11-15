@@ -12,18 +12,24 @@ This repo builds the missing wheel the way Blender builds its own. It changes no
 
 ## Install
 
-Download the wheel from [Releases](../../releases), then:
+The wheels are on [Releases](../../releases) and on a PEP 503 index at `https://sea-ai.github.io/bpy-linux-aarch64/simple/`.
 
 ```bash
-pip install bpy-5.2.2-cp313-cp313-manylinux_2_28_aarch64.whl
+pip install bpy --extra-index-url https://sea-ai.github.io/bpy-linux-aarch64/simple/
 ```
 
-In a uv project that depends on `bpy`:
+In a uv project, take only `bpy` on Linux aarch64 from the index and everything else from PyPI:
 
-```bash
-uv sync --no-install-package bpy
-uv pip install bpy-5.2.2-cp313-cp313-manylinux_2_28_aarch64.whl
-uv run --no-sync python -c "import bpy; print(bpy.app.version_string)"
+```toml
+[tool.uv.sources]
+bpy = [
+    { index = "bpy-aarch64", marker = "sys_platform == 'linux' and platform_machine == 'aarch64'" },
+]
+
+[[tool.uv.index]]
+name = "bpy-aarch64"
+url = "https://sea-ai.github.io/bpy-linux-aarch64/simple/"
+explicit = true
 ```
 
 Requires Python 3.13 and glibc 2.28 or newer (Ubuntu 20.04+, Debian 11+, RHEL 8+). Cycles finds the GPU through the driver; no CUDA toolkit is needed at runtime.
@@ -54,7 +60,19 @@ On any aarch64 Linux host with Docker (no GPU needed):
 
 The wheel lands in `work/dist/`, next to a `.buildinfo` file listing every commit and version that went in. `work/` keeps sources and object files, so a rebuild is incremental.
 
-CI runs the same script on GitHub's `ubuntu-24.04-arm` runners: run the **build** workflow with a list of tags and each gets its own release.
+## Publish
+
+A release holds the wheel and its `METADATA` as `<wheel>.metadata` (PEP 658), so a resolver reads the dependencies without downloading the wheel. [ghr-pypi](https://ghr-pypi.readthedocs.io/) builds the index from the releases and [ghp-import](https://github.com/c-w/ghp-import) pushes it to the `gh-pages` branch, which GitHub Pages serves:
+
+```bash
+tag=v5.2.2 wheel=work/dist/bpy-5.2.2-cp313-cp313-manylinux_2_28_aarch64.whl
+unzip -p "$wheel" "bpy-${tag#v}.dist-info/METADATA" > "$wheel.metadata"
+gh release create "$tag" "$wheel" "$wheel.metadata" --title "bpy ${tag#v}" --notes-file notes.md
+GHR_PYPI_TOKEN=$(gh auth token) uvx ghr-pypi index SEA-AI/bpy-linux-aarch64 --out _site
+uvx ghp-import --no-jekyll --push _site
+```
+
+The notes list the `.buildinfo` commits and versions, as in [v5.2.2](../../releases/tag/v5.2.2).
 
 ## Licence
 
