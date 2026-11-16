@@ -62,16 +62,17 @@ The build environment (Rocky 8), CUDA and OptiX versions, CMake presets and whee
 
 ## Publish
 
-After `./build.sh`, write each wheel's metadata beside it and release both:
+After `./build.sh`, write each wheel's metadata beside it, upload both to a draft release, then publish it:
 
 ```bash
 tag=v5.2.4
 uvx ghr-pypi extract-meta work/dist/
 gh release create "$tag" work/dist/bpy-"${tag#v}"-*.whl work/dist/bpy-"${tag#v}"-*.whl.metadata \
-    --title "bpy ${tag#v}" --notes-file "work/dist/$tag.buildinfo"
+    --draft --title "bpy ${tag#v}" --notes-file "work/dist/$tag.buildinfo"
+gh release edit "$tag" --draft=false
 ```
 
-Publishing the release rebuilds the index: [`pages.yml`](.github/workflows/pages.yml) runs [ghr-pypi](https://ghr-pypi.readthedocs.io/) and deploys to GitHub Pages. The `.metadata` file (PEP 658) lets a resolver read `bpy`'s dependencies without downloading the wheel.
+Publishing the release rebuilds the index; one published before its upload ends would be indexed without its wheel. [`pages.yml`](.github/workflows/pages.yml) runs [ghr-pypi](https://ghr-pypi.readthedocs.io/) and deploys to GitHub Pages. The `.metadata` file (PEP 658) lets a resolver read `bpy`'s dependencies without downloading the wheel.
 
 ## Licence
 
