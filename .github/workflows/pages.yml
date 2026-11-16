@@ -1,0 +1,45 @@
+# Rebuilds the package index from the releases and serves it on GitHub Pages,
+# as ghr-pypi's documentation sets it up:
+# https://ghr-pypi.readthedocs.io/en/stable/tutorials/github-pages.html
+name: pages
+
+on:
+  release:
+    types: [published, deleted]
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # read the repository's releases
+    steps:
+      - uses: astral-sh/setup-uv@v9
+
+      - name: Build the package index
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: uvx ghr-pypi index
+
+      - uses: actions/configure-pages@v6
+
+      - uses: actions/upload-pages-artifact@v5
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write # deploy the built site
+      id-token: write # authenticate the deployment
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
