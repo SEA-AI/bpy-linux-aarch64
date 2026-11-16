@@ -20,7 +20,7 @@ jobs:
     permissions:
       contents: read # read the repository's releases
     steps:
-      - uses: astral-sh/setup-uv@v9
+      - uses: astral-sh/setup-uv@v10.3.3
 
       - name: Build the package index
         env:
