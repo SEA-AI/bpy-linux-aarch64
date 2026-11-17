@@ -59,13 +59,13 @@ The build environment (Rocky 8), CUDA and OptiX versions, CMake presets and whee
 | **OptiX** | NVIDIA's SDK installer | Headers from [NVIDIA/optix-dev](https://github.com/NVIDIA/optix-dev); NVIDIA ships no Linux aarch64 installer |
 | **GPU backends** | CUDA, OptiX, HIP, oneAPI | CUDA and OptiX; AMD and Intel ship no Linux aarch64 toolchains |
 | **CUDA kernels** | x86 desktop GPUs | `sm_87`, `sm_90`, `sm_100`, `sm_120`, `sm_121`, PTX `compute_87` ([versions.env](versions.env)) |
-| **Source** | the tag | the tag plus [patches/](patches), with a local version such as `5.2.4+patch.1` |
+| **Source** | the tag | the tag plus [patches/](patches), with a local version such as `+patch.1` |
 
 ## Patches
 
 | Patch | Bug |
 |---|---|
-| [cycles-node-refcount-atomic](patches/cycles-node-refcount-atomic.patch) | Cycles syncs meshes in parallel and can lose updates to a shader's use count. When it drops to zero, the material renders black for the rest of a persistent-data session. Seen on a DGX Spark within about 650 frames. |
+| [cycles-node-refcount-atomic](patches/cycles-node-refcount-atomic.patch) | Parallel mesh sync loses updates to shader reference counts; a shader that reaches zero renders black for the rest of a persistent-data session. |
 
 ## Publish
 

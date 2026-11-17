@@ -1,16 +1,14 @@
 Cycles: make Node reference counts atomic
 
-Cycles' geometry sync runs in a task pool, one task per mesh (sync_mesh, and
-likewise hair, point clouds and lights). Each sync_mesh task builds a temporary
-Mesh whose set_used_shaders() references and dereferences the
-shared Shader nodes. Node::reference() and dereference() are plain int
-increments, so concurrent updates are lost and a shader's count drifts. Once a
-used shader reaches zero, SVMCompiler::compile skips it and it renders black
-until the session ends. Seen with persistent data on a DGX Spark, where a scene
-with many meshes sharing materials lost one within about 650 frames; with this
-patch, none in 5 runs of 1440 frames x 2 cameras.
+BlenderSync syncs geometry in a task pool. Each sync_mesh task builds a
+temporary Mesh that references the shared shaders and dereferences them when
+destroyed. Node::reference() and dereference() are plain int updates, so
+concurrent tasks lose some. A used shader whose count reaches zero is skipped
+by SVMCompiler::compile and renders black for the rest of a persistent-data
+session.
 
-Upstream: not fixed as of Blender 5.2.4 and main (2026-11-17).
+Upstream: open in Blender 5.2.4 and main as of 2026-11-17; drop this patch once
+fixed.
 
 diff --git a/intern/cycles/graph/node.h b/intern/cycles/graph/node.h
 index 588ffb17..02db41a3 100644
