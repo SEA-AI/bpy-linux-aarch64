@@ -7,7 +7,7 @@
 
 [Blender](https://www.blender.org) as a Python module, `bpy`, for Linux on ARM64, with Cycles on NVIDIA GPUs.
 
-Blender publishes `bpy` wheels for Linux x86_64, macOS and Windows, not for Linux aarch64. This repo builds that wheel from Blender's own release tag the way Blender's build servers build theirs, plus fixes Blender has not shipped yet.
+Blender publishes `bpy` wheels for Linux x86_64, macOS and Windows, not for Linux aarch64. This repo builds that wheel from Blender's release tag, plus [patches](#patches) Blender has not shipped yet, the way Blender's build servers build theirs.
 
 | | |
 |---|---|
@@ -65,7 +65,7 @@ The build environment (Rocky 8), CUDA and OptiX versions, CMake presets and whee
 
 | Patch | Bug |
 |---|---|
-| [cycles-node-refcount-atomic](patches/cycles-node-refcount-atomic.patch) | Cycles syncs meshes in parallel and counts shader references without atomics. A count that drifts to zero leaves that material black for the rest of a persistent-data session. ARM hosts hit it within a few hundred renders. |
+| [cycles-node-refcount-atomic](patches/cycles-node-refcount-atomic.patch) | Cycles syncs meshes in parallel and can lose updates to a shader's use count. When it drops to zero, the material renders black for the rest of a persistent-data session. Seen on a DGX Spark within about 650 frames. |
 
 ## Publish
 

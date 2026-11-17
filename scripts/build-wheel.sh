@@ -29,9 +29,9 @@ else
     git -C "$SRC" checkout -q -f "$BLENDER_TAG"
 fi
 
-# ARM: buildbot builds the tag as is. These fix bugs Blender has not fixed yet;
-# each patch says which.
+# ARM: buildbot builds the tag as is; patches/ holds fixes Blender has not shipped.
 stage "Patches"
+shopt -s nullglob
 for patch in /opt/bpy/patches/*.patch; do
     echo "$(basename "$patch")"
     git -C "$SRC" apply "$patch"
@@ -101,6 +101,7 @@ grep -q "+${LOCAL_VERSION}" "$SRC/build_files/utils/make_bpy_wheel.py"
 cat > "$DIST/${BLENDER_TAG}.buildinfo" <<EOF
 BLENDER_TAG=${BLENDER_TAG}
 BLENDER_COMMIT=$(git -C "$SRC" rev-parse HEAD)
+LOCAL_VERSION=${LOCAL_VERSION}
 PATCHES="$(cd /opt/bpy/patches && echo *.patch)"
 LIB_BRANCH=${LIB_BRANCH}
 LIB_COMMIT=${LIB_COMMIT}
