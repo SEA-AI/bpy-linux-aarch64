@@ -37,7 +37,7 @@ docker build \
 mkdir -p "$WORK_DIR"
 docker run --rm \
     -e BLENDER_TAG -e LIB_BRANCH="$LIB_BRANCH" -e LIB_COMMIT="$LIB_COMMIT" \
-    -e CUDA_VERSION="$CUDA_VERSION" -e OPTIX_VERSION="$OPTIX_VERSION" -e CUDA_ARCHS \
+    -e CUDA_VERSION="$CUDA_VERSION" -e OPTIX_VERSION="$OPTIX_VERSION" -e CUDA_ARCHS -e LOCAL_VERSION \
     ${JOBS:+-e JOBS="$JOBS"} \
     -v "$WORK_DIR":/work \
     "$IMAGE"

@@ -7,7 +7,7 @@
 # /work persists between runs: sources, libraries and object files are reused.
 set -euo pipefail
 
-: "${BLENDER_TAG:?}" "${LIB_BRANCH:?}" "${LIB_COMMIT:?}" "${CUDA_VERSION:?}" "${OPTIX_VERSION:?}" "${CUDA_ARCHS:?}"
+: "${BLENDER_TAG:?}" "${LIB_BRANCH:?}" "${LIB_COMMIT:?}" "${CUDA_VERSION:?}" "${OPTIX_VERSION:?}" "${CUDA_ARCHS:?}" "${LOCAL_VERSION:?}"
 SRC=/work/blender
 BUILD=/work/build/$BLENDER_TAG
 INSTALL=/work/install/$BLENDER_TAG
@@ -26,8 +26,16 @@ if [ ! -d "$SRC/.git" ]; then
     git clone --depth 1 --branch "$BLENDER_TAG" https://projects.blender.org/blender/blender.git "$SRC"
 else
     git -C "$SRC" fetch --depth 1 origin tag "$BLENDER_TAG"
-    git -C "$SRC" checkout -q "$BLENDER_TAG"
+    git -C "$SRC" checkout -q -f "$BLENDER_TAG"
 fi
+
+# ARM: buildbot builds the tag as is. These fix bugs Blender has not fixed yet;
+# each patch says which.
+stage "Patches"
+for patch in /opt/bpy/patches/*.patch; do
+    echo "$(basename "$patch")"
+    git -C "$SRC" apply "$patch"
+done
 
 # ARM: buildbot gets libraries from the tag's submodule pin; arm64 has none.
 stage "lib-linux_arm64 ${LIB_BRANCH} @ ${LIB_COMMIT:0:10}"
@@ -82,6 +90,10 @@ PY=$(ls "$LIB"/python/bin/python3.* | grep -E 'python3\.[0-9]+$' | head -1)
 "$PY" -m venv /work/wheel-env
 /work/wheel-env/bin/pip install -q setuptools wheel
 mkdir -p "$DIST"
+# ARM: the local version marks the patched build.
+sed -i "s/version=blender_version_str,/version=blender_version_str + \"+${LOCAL_VERSION}\",/" \
+    "$SRC/build_files/utils/make_bpy_wheel.py"
+grep -q "+${LOCAL_VERSION}" "$SRC/build_files/utils/make_bpy_wheel.py"
 /work/wheel-env/bin/python "$SRC/build_files/utils/make_bpy_wheel.py" "$INSTALL" \
     --build-dir "$BUILD" --output-dir "$DIST"
 
@@ -89,6 +101,7 @@ mkdir -p "$DIST"
 cat > "$DIST/${BLENDER_TAG}.buildinfo" <<EOF
 BLENDER_TAG=${BLENDER_TAG}
 BLENDER_COMMIT=$(git -C "$SRC" rev-parse HEAD)
+PATCHES="$(cd /opt/bpy/patches && echo *.patch)"
 LIB_BRANCH=${LIB_BRANCH}
 LIB_COMMIT=${LIB_COMMIT}
 CUDA_VERSION=${CUDA_VERSION}

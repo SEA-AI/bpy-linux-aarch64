@@ -18,6 +18,7 @@ RUN curl -fsSL -o /tmp/setup.sh \
 
 COPY scripts/build-wheel.sh /usr/local/bin/build-wheel.sh
 COPY cmake/linux_aarch64.cmake /opt/bpy/linux_aarch64.cmake
+COPY patches/ /opt/bpy/patches/
 
 WORKDIR /work
 ENTRYPOINT ["scl", "enable", "gcc-toolset-14", "--", "/usr/local/bin/build-wheel.sh"]
