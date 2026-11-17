@@ -1,0 +1,64 @@
+Cycles: make Node reference counts atomic
+
+BlenderSync syncs geometry in a task pool. Each sync_mesh task builds a
+temporary Mesh that references the shared shaders and dereferences them when
+destroyed. Node::reference() and dereference() are plain int updates, so
+concurrent tasks lose some. A used shader whose count reaches zero is skipped
+by SVMCompiler::compile and renders black for the rest of a persistent-data
+session.
+
+Upstream: open in Blender 5.2.4 and main as of 2026-11-17; drop this patch once
+fixed.
+
+diff --git a/intern/cycles/graph/node.h b/intern/cycles/graph/node.h
+index 588ffb17..02db41a3 100644
+--- a/intern/cycles/graph/node.h
++++ b/intern/cycles/graph/node.h
+@@ -9,6 +9,7 @@
+ #include "graph/node_type.h"
+ 
+ #include "util/array.h"
++#include "util/atomic.h"
+ #include "util/param.h"
+ #include "util/types.h"
+ 
+@@ -181,19 +182,21 @@ struct Node {
+   const NodeOwner *get_owner() const;
+   void set_owner(const NodeOwner *owner_);
+ 
++  /* Atomic: BlenderSync::sync_mesh references and dereferences shared shaders from concurrent
++   * tasks. A lost update leaves a used shader at zero, which SVMCompiler then skips. */
+   int reference_count() const
+   {
+-    return ref_count;
++    return atomic_load_int32(&ref_count);
+   }
+ 
+   void reference()
+   {
+-    ref_count += 1;
++    atomic_add_and_fetch_int32(&ref_count, 1);
+   }
+ 
+   void dereference()
+   {
+-    ref_count -= 1;
++    atomic_sub_and_fetch_int32(&ref_count, 1);
+   }
+ 
+   /* Set the reference count to zero. This should only be called when we know for sure that the
+@@ -201,12 +204,12 @@ struct Node {
+    * they are never actually deleted. */
+   void clear_reference_count()
+   {
+-    ref_count = 0;
++    atomic_store_int32(&ref_count, 0);
+   }
+ 
+  protected:
+   const NodeOwner *owner;
+-  int ref_count{0};
++  int32_t ref_count{0};
+ 
+   template<typename T> static T &get_socket_value(const Node *node, const SocketType &socket)
+   {
