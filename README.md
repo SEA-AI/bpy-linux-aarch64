@@ -63,9 +63,9 @@ The build environment (Rocky 8), CUDA and OptiX versions, CMake presets and whee
 
 ## Patches
 
-| Patch | Bug |
-|---|---|
-| [cycles-node-refcount-atomic](patches/cycles-node-refcount-atomic.patch) | Parallel mesh sync loses updates to shader reference counts; a shader that reaches zero renders black for the rest of a persistent-data session. |
+| Patch | Bug | Upstream |
+|---|---|---|
+| [cycles-node-refcount-atomic](patches/cycles-node-refcount-atomic.patch) | Parallel mesh sync loses updates to shader reference counts; a shader that reaches zero renders black for the rest of a persistent-data session. | [#166795](https://projects.blender.org/blender/blender/issues/166795) |
 
 ## Publish
 
