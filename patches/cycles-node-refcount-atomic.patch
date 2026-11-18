@@ -7,8 +7,7 @@ concurrent tasks lose some. A used shader whose count reaches zero is skipped
 by SVMCompiler::compile and renders black for the rest of a persistent-data
 session.
 
-Upstream: open in Blender 5.2.4 and main as of 2026-11-17; drop this patch once
-fixed.
+Upstream: https://projects.blender.org/blender/blender/issues/166795; drop this patch once fixed.
 
 diff --git a/intern/cycles/graph/node.h b/intern/cycles/graph/node.h
 index 588ffb17..02db41a3 100644
