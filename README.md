@@ -44,7 +44,7 @@ On any aarch64 Linux host with Docker; no GPU needed:
 
 ```bash
 ./build.sh            # the tag in versions.env
-./build.sh v5.2.4     # any other Blender tag
+./build.sh v5.2.2     # any other Blender tag
 ```
 
 The wheel lands in `work/dist/` with a `.buildinfo` file listing every commit and version that went in. `work/` keeps sources and objects, so a rebuild is incremental.
@@ -63,9 +63,9 @@ The build environment (Rocky 8), CUDA and OptiX versions, CMake presets and whee
 
 ## Patches
 
-| Patch | Bug |
-|---|---|
-| [cycles-node-refcount-atomic](patches/cycles-node-refcount-atomic.patch) | Parallel mesh sync loses updates to shader reference counts; a shader that reaches zero renders black for the rest of a persistent-data session. |
+| Patch | Bug | Upstream |
+|---|---|---|
+| [cycles-node-refcount-atomic](patches/cycles-node-refcount-atomic.patch) | Parallel mesh sync loses updates to shader reference counts; a shader that reaches zero renders black for the rest of a persistent-data session. | [#166795](https://projects.blender.org/blender/blender/issues/166795) |
 
 ## Publish
 
